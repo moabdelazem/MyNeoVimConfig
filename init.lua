@@ -86,6 +86,9 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
 --
+vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
+vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
+
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
@@ -107,6 +110,7 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
+--
 
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
@@ -861,6 +865,40 @@ require('lazy').setup({
 
   {
     'tpope/vim-fugitive',
+    config = function()
+      vim.keymap.set('n', '<leader>gs', vim.cmd.Git)
+
+      local ThePrimeagen_Fugitive = vim.api.nvim_create_augroup('ThePrimeagen_Fugitive', {})
+
+      local autocmd = vim.api.nvim_create_autocmd
+      autocmd('BufWinEnter', {
+        group = ThePrimeagen_Fugitive,
+        pattern = '*',
+        callback = function()
+          if vim.bo.ft ~= 'fugitive' then
+            return
+          end
+
+          local bufnr = vim.api.nvim_get_current_buf()
+          local opts = { buffer = bufnr, remap = false }
+          vim.keymap.set('n', '<leader>p', function()
+            vim.cmd.Git 'push'
+          end, opts)
+
+          -- rebase always
+          vim.keymap.set('n', '<leader>P', function()
+            vim.cmd.Git { 'pull', '--rebase' }
+          end, opts)
+
+          -- NOTE: It allows me to easily set the branch i am pushing and any tracking
+          -- needed if i did not set the branch up correctly
+          vim.keymap.set('n', '<leader>t', ':Git push -u origin ', opts)
+        end,
+      })
+
+      vim.keymap.set('n', 'gu', '<cmd>diffget //2<CR>')
+      vim.keymap.set('n', 'gh', '<cmd>diffget //3<CR>')
+    end,
   },
 }, {
   ui = {
